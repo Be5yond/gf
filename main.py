@@ -10,23 +10,6 @@ repo = Repo()
 app = typer.Typer()
 app.add_typer(feature.app, name='feature')
 
-class Feature(Enum):
-    start = 'start'
-    publish = 'publish'
-    delete = 'delete'
-    finish = 'finish'
-
-
-
-def complete_name():
-    return ["Camila", "Carlos", "Sebastian"]
-
-
-@app.command()
-def gitflow(command: Optional[str]=typer.Argument('feature', help='[feature|release|hotfix]', autocompletion=complete_name), 
-            action: Feature=typer.Argument('action', help='[start|publish|finish|delete|pull]')):
-    typer.echo(f"Hello {command}-{action}")
-
 
 @app.command()
 def init():
@@ -36,12 +19,6 @@ def init():
     repo.git.branch('develop')
     repo.git.branch('release')
     repo.git.branch('test')
-
-
-# @app.command()
-# def feature(name: str=typer.Argument(..., help='feature branch name'),
-#             action: Feature=typer.Argument(help='[start|publish|finish|delete|pull]', default='start')):
-#     typer.echo(f"choose{name} {action}")
 
 
 @app.command()
@@ -97,6 +74,7 @@ def main(verbose: bool = False):
     """
     if verbose:
         typer.echo("Will write verbose output")
+
 
 if __name__ == "__main__":
     app()

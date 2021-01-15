@@ -40,7 +40,7 @@ def delete():
 
 @app.command()
 def publish(name: str = typer.Argument(repo.head.reference.name, help='branch name')):
-    """ submit branch to Test 
+    """ publish branch to release 
     """
     repo.git.checkout('release')
     repo.git.merge(name)

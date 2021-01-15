@@ -15,7 +15,6 @@ from prompt_toolkit.formatted_text import AnyFormattedText, HTML, to_formatted_t
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.shortcuts import prompt
-import typer
 
 
 _T = TypeVar("_T")
