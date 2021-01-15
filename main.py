@@ -1,7 +1,7 @@
-from typing import Optional
-from enum import Enum
 from git import Repo
 import typer
+import time
+import re
 from dialog import CommitMsgPrompt, radiolist_dialog
 from prompt_toolkit.formatted_text import HTML
 import feature
@@ -48,7 +48,9 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
 
 
 @app.command()
-def checkout():
+def switch():
+    """ switch branch
+    """
     current_branch = repo.head.reference
     values = [(head, head.name) for head in repo.heads if not head == current_branch]
     values.insert(0, (current_branch, HTML(f'<style fg="green">{current_branch.name}</style>')))
@@ -62,9 +64,32 @@ def checkout():
 
 
 @app.command()
-def tag(ver: str):
+def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major version number'),
+        minor: bool=typer.Option(False, '--minor', '-m', help='increse minor version number'),
+        patch: bool=typer.Option(False, '--minor', '-p', help='increse patch version number'),):
     """major.minor.patch"""
-    typer.echo(f'delete user {ver}')
+    typer.echo(f'tag: {major}.{minor}.{patch}')
+
+    try:
+        name = repo.tags[-1].name
+    except IndexError:
+        mj, mi, p = 0, 0, 0
+    else:
+        mj, mi, p, date = re.split('[._]', name[1:])
+
+    if major:
+        mj, mi, p = int(mj)+1, 0, 0
+    elif minor:
+        mi, p = int(mi)+1, 0
+    elif patch:
+        p = int(p)+1
+    else:
+        for tag in reversed(repo.tags):
+            typer.echo(tag.name)
+        raise typer.Exit(0)
+    tag = f'v{mj}.{mi}.{p}_{time.strftime("%Y%m%d")}'
+    typer.echo(tag)
+    repo.git.tag(tag)
 
 
 @app.callback()
