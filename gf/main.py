@@ -2,9 +2,9 @@ from git import Repo
 import typer
 import time
 import re
-from dialog import CommitMsgPrompt, radiolist_dialog
+from .dialog import CommitMsgPrompt, radiolist_dialog
 from prompt_toolkit.formatted_text import HTML
-import feature
+from . import feature
 
 repo = Repo()
 app = typer.Typer()
@@ -100,6 +100,9 @@ def main(verbose: bool = False):
     if verbose:
         typer.echo("Will write verbose output")
 
+
+def main():
+    app()
 
 if __name__ == "__main__":
     app()

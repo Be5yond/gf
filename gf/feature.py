@@ -1,5 +1,5 @@
 import typer
-from dialog import radiolist_dialog
+from .dialog import radiolist_dialog
 from git import Repo
 from git.exc import GitCommandError
 app = typer.Typer()
