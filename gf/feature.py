@@ -20,7 +20,7 @@ def start(name: str = typer.Argument(..., help='branch name')):
 
 @app.command()
 def submit(name: str = typer.Argument(repo.head.reference.name, help='branch name')):
-    """ submit branch to Test branch
+    """ submit branch to Test branch.
     """
     nt(repo.git.checkout)('test')
     nt(repo.git.merge)(name)
@@ -36,12 +36,11 @@ def delete():
         raise typer.Abort()
     if repo.head.reference == result:
         nt(repo.git.checkout)('develop')
-    try:
-        repo.delete_head(result)
-    except GitCommandError as e:
-        typer.echo(e)
-    else:
-        typer.echo(f'delete branch {result.name}')
+    nt(repo.delete_head)(result)
+    # except GitCommandError as e:
+    #     typer.echo(e)
+    # else:
+    #     typer.echo(f'delete branch {result.name}')
 
 @app.command()
 def publish(name: str = typer.Argument(repo.head.reference.name, help='branch name')):
