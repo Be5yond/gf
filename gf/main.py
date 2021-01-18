@@ -2,6 +2,7 @@ import time
 import re
 from git import Repo
 from git.exc import GitCommandError
+from prompt_toolkit.application import current
 import typer
 from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog
@@ -26,13 +27,11 @@ def init():
 
 
 @app.command()
-def hotfix():
-    typer.echo('hotfix')
-
-
-@app.command()
 def release():
-    typer.echo('release')
+    """ After passing the test phase, merge test branch to main branch.
+    """
+    nt(repo.git.checkout)('main')
+    nt(repo.git.merge)('test')
 
 
 @app.command(help=f"""
@@ -49,6 +48,18 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
     message = CommitMsgPrompt.message(body, footer)
     typer.echo(message)
     repo.index.commit(message)
+
+
+@app.command()
+def branch():
+    """ list branchs in this repository"""
+    current_branch = repo.head.reference
+    for head in repo.heads:
+        if head == current_branch:
+            typer.secho(head.name, fg=typer.colors.GREEN)
+        else:
+            typer.echo(head.name)
+
 
 
 @app.command()

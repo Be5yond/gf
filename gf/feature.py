@@ -43,7 +43,7 @@ def delete():
     #     typer.echo(f'delete branch {result.name}')
 
 @app.command()
-def publish(name: str = typer.Argument(repo.head.reference.name, help='branch name')):
+def finish(name: str = typer.Argument(repo.head.reference.name, help='branch name')):
     """ publish branch to release 
     """
     nt(repo.git.checkout)('main')
