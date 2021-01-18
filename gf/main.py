@@ -1,14 +1,18 @@
-from git import Repo
-import typer
 import time
 import re
-from .dialog import CommitMsgPrompt, radiolist_dialog
+from git import Repo
+from git.exc import GitCommandError
+import typer
 from prompt_toolkit.formatted_text import HTML
-from . import feature
+from .dialog import CommitMsgPrompt, radiolist_dialog
+from . import feature, hotfix
+from .utils import no_traceback as nt
+
 
 repo = Repo()
 app = typer.Typer()
 app.add_typer(feature.app, name='feature')
+app.add_typer(hotfix.app, name='hotfix')
 
 
 @app.command()
@@ -60,16 +64,16 @@ def switch():
     if not result:
         raise typer.Abort()
     else:
-        repo.git.checkout(result.name)
+        nt(repo.git.checkout)(result.name)
 
 
 @app.command()
-def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major version number'),
-        minor: bool=typer.Option(False, '--minor', '-m', help='increse minor version number'),
-        patch: bool=typer.Option(False, '--minor', '-p', help='increse patch version number'),):
-    """major.minor.patch"""
-    typer.echo(f'tag: {major}.{minor}.{patch}')
-
+def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major version number. e.g: tag -M (v0.1.2 -> v1.0.0)'),
+        minor: bool=typer.Option(False, '--minor', '-m', help='increse minor version number. e.g: tag -m (v0.1.2 -> v0.2.0)'),
+        patch: bool=typer.Option(False, '--minor', '-p', help='increse patch version number. e.g: tag -p (v0.1.2 -> v0.1.3)'),):
+    """Use -M/-m/-p to create a tag in 'v{major}.{minor}.{patch}_{date}' format. The version number is self-increasing.
+       no-option: list tags.
+    """
     try:
         name = repo.tags[-1].name
     except IndexError:
