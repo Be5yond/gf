@@ -6,6 +6,7 @@ from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog
 from . import feature, hotfix
 from .utils import no_traceback as nt
+from .utils import get_create_time
 
 
 repo = Repo()
@@ -53,10 +54,12 @@ def branch():
     """ list branchs in this repository"""
     current_branch = repo.head.reference
     for head in repo.heads:
+        date = get_create_time(head.name)
         if head == current_branch:
-            typer.secho(head.name, fg=typer.colors.GREEN)
+            color = typer.colors.GREEN
         else:
-            typer.echo(head.name)
+            color = typer.colors.WHITE
+        typer.secho(f'{head.name}\t\t{date}', fg=color)
 
 
 @app.command()
