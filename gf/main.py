@@ -1,8 +1,6 @@
 import time
 import re
 from git import Repo
-from git.exc import GitCommandError
-from prompt_toolkit.application import current
 import typer
 from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog
@@ -19,7 +17,7 @@ app.add_typer(hotfix.app, name='hotfix')
 @app.command()
 def init():
     """
-    create branches: 
+    create base branches: develop | test | release
     """
     repo.git.branch('develop')
     repo.git.branch('release')
@@ -59,7 +57,6 @@ def branch():
             typer.secho(head.name, fg=typer.colors.GREEN)
         else:
             typer.echo(head.name)
-
 
 
 @app.command()
@@ -107,13 +104,13 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
     repo.git.tag(tag)
 
 
-@app.callback()
-def main(verbose: bool = False):
-    """
-    Manage users in the awesome CLI app.
-    """
-    if verbose:
-        typer.echo("Will write verbose output")
+# @app.callback()
+# def main(verbose: bool = False):
+#     """
+#     Manage users in the awesome CLI app.
+#     """
+#     if verbose:
+#         typer.echo("Will write verbose output")
 
 
 def main():

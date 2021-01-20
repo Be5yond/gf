@@ -4,7 +4,7 @@ from git.exc import GitCommandError
 from .dialog import radiolist_dialog
 from .utils import no_traceback as nt
 
-app = typer.Typer()
+app = typer.Typer(help='start/submit/delete a feature branch')
 repo = Repo()
 
 

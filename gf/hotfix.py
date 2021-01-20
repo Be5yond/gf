@@ -2,7 +2,7 @@ import typer
 from git import Repo
 from .utils import no_traceback as nt
 
-app = typer.Typer()
+app = typer.Typer(help='start/finish a hotfix branch')
 repo = Repo()
 
 
