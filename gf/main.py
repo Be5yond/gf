@@ -1,12 +1,12 @@
 import time
 import re
-from git import Repo
+from git import Repo, index
 import typer
 from prompt_toolkit.formatted_text import HTML
-from .dialog import CommitMsgPrompt, radiolist_dialog
+from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog
 from . import feature, hotfix
 from .utils import no_traceback as nt
-from .utils import get_create_time
+from .utils import get_create_time, index_status
 
 
 repo = Repo()
@@ -45,6 +45,8 @@ def release():
 def commit(body: bool = typer.Option(False, '--body', '-b', help='include body message'), 
         footer: bool = typer.Option(False, '--foot', '-f', help='include footer message')):
     message = CommitMsgPrompt.message(body, footer)
+    if not message:
+        raise typer.Abort()
     typer.echo(message)
     repo.index.commit(message)
 
@@ -57,9 +59,11 @@ def branch():
         date = get_create_time(head.name)
         if head == current_branch:
             color = typer.colors.GREEN
+            prefix = '*'
         else:
             color = typer.colors.WHITE
-        typer.secho(f'{head.name}\t\t{date}', fg=color)
+            prefix = ' '
+        typer.secho(f'{prefix} {head.name:<30}{date}', fg=color)
 
 
 @app.command()
@@ -105,6 +109,14 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
     tag = f'v{mj}.{mi}.{p}_{time.strftime("%Y%m%d")}'
     typer.echo(tag)
     repo.git.tag(tag)
+
+@app.command()
+def status():
+    stats = index_status()
+    func = lambda x: (x, x)
+    # print(stats)
+    staged, modified, untracked = [list(map(func, d)) for d in stats if d]
+    stats_dialog('', staged, modified, untracked)
 
 
 # @app.callback()

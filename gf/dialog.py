@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from typing import List, Sequence, Tuple, TypeVar
 from prompt_toolkit.application import Application
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
@@ -7,18 +8,21 @@ from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.containers import Window, HSplit
 from prompt_toolkit.layout.margins import ConditionalMargin, ScrollbarMargin
-from prompt_toolkit.widgets import Label
+from prompt_toolkit.widgets import Label, Frame, CheckboxList
 from prompt_toolkit.widgets.base import _DialogList
 
-from typing import List, Sequence, Tuple, TypeVar
 from prompt_toolkit.formatted_text import AnyFormattedText, HTML, to_formatted_text
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.shortcuts import prompt
+from prompt_toolkit.key_binding.bindings.focus import focus_next
+
 
 
 _T = TypeVar("_T")
 
+def ansired(key: str) -> str:
+    return f'<b><style bg="ansired">[{key}]</style></b>'
 
 class SingleSelectList(_DialogList):
     """
@@ -124,7 +128,7 @@ def radiolist_dialog(title='', values=None, style=None, async_=False):
 
     radio_list = SingleSelectList(values)        
     application = Application(
-        layout=Layout(HSplit([ Label(title), radio_list])),
+        layout=Layout(HSplit([Label(title), radio_list])),
         key_bindings=bindings,
         mouse_support=True,
         style=style,        
@@ -139,15 +143,9 @@ def radiolist_dialog(title='', values=None, style=None, async_=False):
 
 class CommitMsgPrompt:
     @staticmethod
-    def title():
-        def bottom_toolbar():
-            return HTML('commit purpose, should less than <b><style bg="ansired">50</style></b> letters. Press <b><style bg="ansired">[Ctrl + C]</style></b> to abort.')
-        return prompt('header: ', rprompt='igit', bottom_toolbar=bottom_toolbar())
-
-    @staticmethod
     def commit_type():
         result = radiolist_dialog(
-            title='Choose a commit type: (Press [Enter] to confirm, [Esc] to cancel.)',
+            title=HTML(f'Choose a commit type: (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel.)'),
             values=[
                 ('⚙️', HTML('<style bg="orange" fg="black">⚙️[feature], 新功能</style>')),
                 ('🐛', HTML('<style bg="green" fg="black">🐛[bugfix], 修复问题</style>')),
@@ -160,26 +158,40 @@ class CommitMsgPrompt:
         return result    
 
     @staticmethod
+    def title():
+        def bottom_toolbar():
+            return HTML(f'commit purpose, should less than {ansired(50)} letters. Press {ansired("Ctrl+C")} to abort.')
+        return prompt('header: ', rprompt='gf', bottom_toolbar=bottom_toolbar())
+
+    @staticmethod
     def body():
         def bottom_toolbar():
-            return HTML('Press <b><style bg="ansired">[Esc]</style></b> followed by <b><style bg="ansired">[Enter]</style></b> to accept input. Press <b><style bg="ansired">[Ctrl + C]</style></b> to abort')
-        bindings = KeyBindings()
-        @bindings.add("enter")
+            return HTML(f'Press {ansired("Tab")} to add a new line. {ansired("Enter")} to accept input. Press {ansired("Ctrl+C")} to abort')
+
+        kb = KeyBindings()
+        @kb.add("tab")
         def _(event):
             b = event.app.current_buffer
             idx = int(b.document.current_line[0])
             b.insert_text(f'\n{idx+1}.')
-        return prompt('body: ', rprompt='igit', bottom_toolbar=bottom_toolbar(), multiline=True, key_bindings=bindings, default='1.') 
+
+        @kb.add("enter")
+        def _(event):
+            event.app.exit(result=event.app.current_buffer)
+
+        return prompt('body: ', rprompt='gf', bottom_toolbar=bottom_toolbar(), multiline=True, key_bindings=kb, default='1.') 
 
     @staticmethod
     def footer():
         def bottom_toolbar():
-            return HTML('BREAKING CHANGE or Close Issue. Press <b><style bg="ansired">[Ctrl + C]</style></b> to abort')
-        return prompt('footer: ', rprompt='igit', bottom_toolbar=bottom_toolbar(), default='#')
+            return HTML(f'BREAKING CHANGE or Close Issue. Press {ansired("Enter")} to accept input {ansired("Ctrl+C")} to abort')
+        return prompt('footer: ', rprompt='gf', bottom_toolbar=bottom_toolbar(), default='#')
 
     @classmethod
     def message(cls, body: bool, footer: bool):
         type = cls.commit_type()
+        if not type:
+            return None
         title = cls.title()
         header = f'{type} {title}'
         if body:
@@ -187,4 +199,70 @@ class CommitMsgPrompt:
         if footer:
             footer = cls.footer()
         return '\n\n'.join(filter(bool, [header, body, footer]))
+
+
+def stats_dialog(title: str, stage: List[tuple], modified: List[tuple], untracked: List[tuple]):
+    frame_stage = Frame(
+                body = CheckboxList(values=stage) if stage else Label(text=''),
+                title = HTML(f'Changes to be committed: (After selecting file, press {ansired("Ctrl+R")} to unstage file)')
+            )
+    frame_modified = Frame(
+                body = CheckboxList(values=modified) if stage else Label(text=''),
+                title = HTML(f'Changes not staged for commit: (After selecting file, press {ansired("Ctrl+R")} to discard change, {ansired("Ctrl+A")} to stage file)')
+            )
+    frame_untracked = Frame(
+                body = CheckboxList(values=untracked) if stage else Label(text=''),
+                title = HTML(f'Untracked files: (After selecting file, press {ansired("Ctrl+A")} to stage file, {ansired("Ctrl+I")} to ignore file.') 
+            )
+    root_container = HSplit(
+        [
+            # Horizontal separator.
+            Label(HTML(f'(Press {ansired("N")} to switch window. {ansired("Up][Down")} to move cursor. {ansired("Enter")} to select. {ansired("Ctrl+C")} to quit.)')),
+            # Window(height=1, char="-", style="class:line"),
+            # HSplit([frame_stage, frame_modified, frame_untracked])
+            frame_stage, frame_modified, frame_untracked
+        ]
+    )
+
+    from git import Repo
+    repo = Repo()
+
+    kb = KeyBindings()
+    kb.add("n")(focus_next)
+    # frames = deque([frame_stage, frame_modified, frame_untracked])
+
+    # @kb.add("n")
+    # def _(event):
+    #     event.app.layout.focus(frames[-1])
+    #     frames.rotate(1)
+
+    @kb.add("c-c", eager=True)
+    def _(event):
+        event.app.exit()
+
+    @kb.add("c-a")
+    def _(event):
+        repo.index.add()
+        event.app.exit()
+
+    @kb.add("c-r")
+    def _(event):
+        pass
+
+    @kb.add("c-i")
+    def _(event):
+        pass
+    
+
+
+    application = Application(
+        layout=Layout(root_container, focused_element=frame_modified),
+        key_bindings=kb,
+        # Let's add mouse support!
+        mouse_support=True,
+        # Using an alternate screen buffer means as much as: "run full screen".
+        # It switches the terminal to an alternate screen.
+        full_screen=False
+    )
+    application.run()
 

@@ -22,3 +22,10 @@ def get_create_time(branch_name: str):
     txt = repo.git.reflog(branch_name, date='short')
     dates = re.findall('{[\d-]+}', txt)
     return dates[-1]
+
+def index_status():
+    """Get staged, modified, untracked file"""
+    staged = [diff.a_path for diff in repo.index.diff('HEAD')]
+    modified = [diff.a_path for diff in repo.index.diff(None)]
+    untracked = repo.untracked_files
+    return (staged, modified, untracked)
