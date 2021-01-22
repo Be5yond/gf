@@ -20,8 +20,11 @@ def no_traceback(f):
 def get_create_time(branch_name: str):
     """Get branch creation time"""
     txt = repo.git.reflog(branch_name, date='short')
-    dates = re.findall('{[\d-]+}', txt)
-    return dates[-1]
+    try:
+        dates = re.findall('{[\d-]+}', txt)
+        return dates[-1]
+    except IndexError:
+        return ''
 
 
 def index_status():
