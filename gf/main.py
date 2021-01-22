@@ -112,11 +112,9 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
 
 @app.command()
 def status():
-    stats = index_status()
-    func = lambda x: (x, x)
-    # print(stats)
-    staged, modified, untracked = [list(map(func, d)) for d in stats if d]
-    stats_dialog('', staged, modified, untracked)
+    staged, modified, untracked = index_status()
+    ret = stats_dialog('', staged, modified, untracked)
+    typer.echo(ret)
 
 
 # @app.callback()

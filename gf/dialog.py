@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
+import pathlib
 from typing import List, Sequence, Tuple, TypeVar
 from prompt_toolkit.application import Application
+from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent as E
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.controls import FormattedTextControl,BufferControl
 from prompt_toolkit.layout.containers import Window, HSplit
 from prompt_toolkit.layout.margins import ConditionalMargin, ScrollbarMargin
 from prompt_toolkit.widgets import Label, Frame, CheckboxList
@@ -118,7 +120,7 @@ class SingleSelectList(_DialogList):
 def radiolist_dialog(title='', values=None, style=None, async_=False):
     # Add exit key binding.
     bindings = KeyBindings()
-    @bindings.add('c-d')
+    @bindings.add('c-c')
     @bindings.add("escape")
     def exit_(event):
         """
@@ -145,7 +147,7 @@ class CommitMsgPrompt:
     @staticmethod
     def commit_type():
         result = radiolist_dialog(
-            title=HTML(f'Choose a commit type: (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel.)'),
+            title=HTML(f'Choose a commit type: (Press {ansired("Enter")} to confirm, {ansired("Ctrl+C")} to cancel.)'),
             values=[
                 ('⚙️', HTML('<style bg="orange" fg="black">⚙️[feature], 新功能</style>')),
                 ('🐛', HTML('<style bg="green" fg="black">🐛[bugfix], 修复问题</style>')),
@@ -203,24 +205,24 @@ class CommitMsgPrompt:
 
 def stats_dialog(title: str, stage: List[tuple], modified: List[tuple], untracked: List[tuple]):
     frame_stage = Frame(
-                body = CheckboxList(values=stage) if stage else Label(text=''),
+                body = CheckboxList(values=stage),
                 title = HTML(f'Changes to be committed: (After selecting file, press {ansired("Ctrl+R")} to unstage file)')
-            )
+            ) 
     frame_modified = Frame(
-                body = CheckboxList(values=modified) if stage else Label(text=''),
+                body = CheckboxList(values=modified), 
                 title = HTML(f'Changes not staged for commit: (After selecting file, press {ansired("Ctrl+R")} to discard change, {ansired("Ctrl+A")} to stage file)')
             )
     frame_untracked = Frame(
-                body = CheckboxList(values=untracked) if stage else Label(text=''),
+                body = CheckboxList(values=untracked),
                 title = HTML(f'Untracked files: (After selecting file, press {ansired("Ctrl+A")} to stage file, {ansired("Ctrl+I")} to ignore file.') 
             )
     root_container = HSplit(
         [
-            # Horizontal separator.
             Label(HTML(f'(Press {ansired("N")} to switch window. {ansired("Up][Down")} to move cursor. {ansired("Enter")} to select. {ansired("Ctrl+C")} to quit.)')),
-            # Window(height=1, char="-", style="class:line"),
-            # HSplit([frame_stage, frame_modified, frame_untracked])
-            frame_stage, frame_modified, frame_untracked
+            # Window(BufferControl(buffer=buffer)),
+            frame_stage, 
+            frame_modified, 
+            frame_untracked
         ]
     )
 
@@ -229,40 +231,41 @@ def stats_dialog(title: str, stage: List[tuple], modified: List[tuple], untracke
 
     kb = KeyBindings()
     kb.add("n")(focus_next)
-    # frames = deque([frame_stage, frame_modified, frame_untracked])
-
-    # @kb.add("n")
-    # def _(event):
-    #     event.app.layout.focus(frames[-1])
-    #     frames.rotate(1)
-
     @kb.add("c-c", eager=True)
     def _(event):
         event.app.exit()
 
     @kb.add("c-a")
     def _(event):
-        repo.index.add()
+        "add file to stage"
+        for file in frame_modified.body.current_values:
+            repo.index.add(file)
+        for file in frame_untracked.body.current_values:
+            repo.index.add(file)
         event.app.exit()
 
     @kb.add("c-r")
     def _(event):
-        pass
+        for file in frame_stage.body.current_values:
+            repo.index.remove(file)
+        for file in frame_modified.body.current_values:
+            repo.index.checkout(file, force=True)
+        event.app.exit()
 
     @kb.add("c-i")
     def _(event):
-        pass
-    
-
+        exclude_path = pathlib.Path('.git')/'info'/'exclude'
+        with open (exclude_path, encoding='utf-8', mode='a') as file:
+            file.writelines([f'{path}\n' for path in frame_untracked.body.current_values])
+        return event.app.exit(frame_untracked.body.current_values)
 
     application = Application(
         layout=Layout(root_container, focused_element=frame_modified),
         key_bindings=kb,
         # Let's add mouse support!
         mouse_support=True,
-        # Using an alternate screen buffer means as much as: "run full screen".
         # It switches the terminal to an alternate screen.
         full_screen=False
     )
-    application.run()
+    return application.run()
 

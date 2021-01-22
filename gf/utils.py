@@ -23,9 +23,11 @@ def get_create_time(branch_name: str):
     dates = re.findall('{[\d-]+}', txt)
     return dates[-1]
 
+
 def index_status():
     """Get staged, modified, untracked file"""
-    staged = [diff.a_path for diff in repo.index.diff('HEAD')]
-    modified = [diff.a_path for diff in repo.index.diff(None)]
-    untracked = repo.untracked_files
+    empty = [(None, 'Empty!')]
+    staged = [(diff.a_path, diff.a_path) for diff in repo.index.diff('HEAD')] or empty
+    modified = [(diff.a_path, diff.a_path) for diff in repo.index.diff(None)] or empty
+    untracked = [(path, path) for path in repo.untracked_files] or empty
     return (staged, modified, untracked)
