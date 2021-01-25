@@ -3,7 +3,7 @@ import re
 from git import Repo, index
 import typer
 from prompt_toolkit.formatted_text import HTML
-from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog
+from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
 from . import feature, hotfix
 from .utils import no_traceback as nt
 from .utils import get_create_time, index_status
@@ -74,7 +74,7 @@ def switch():
     values = [(head, head.name) for head in repo.heads if not head == current_branch]
     values.insert(0, (current_branch, HTML(f'<style fg="green">{current_branch.name}</style>')))
     result = radiolist_dialog(
-            title='Checkout to branch (Press [Enter] to confirm, [Esc] to cancel):',
+            title=HTML(f'Checkout to branch (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel):'),
             values=values)
     if not result:
         raise typer.Abort()
