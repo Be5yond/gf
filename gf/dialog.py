@@ -179,7 +179,7 @@ class CommitMsgPrompt:
 
         @kb.add("enter")
         def _(event):
-            event.app.exit(result=event.app.current_buffer)
+            event.app.exit(result=event.app.current_buffer.text)
 
         return prompt('body: ', rprompt='gf', bottom_toolbar=bottom_toolbar(), multiline=True, key_bindings=kb, default='1.') 
 
