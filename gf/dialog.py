@@ -252,7 +252,7 @@ def stats_dialog(branch: str, stage: List[str], modified: List[str], untracked: 
     @kb.add("c-r")
     def _(event):
         for file in frame_stage.body.current_values:
-            repo.index.remove(file)
+            repo.git.restore(file, staged=True)
         for file in frame_modified.body.current_values:
             repo.index.checkout(file, force=True)
         event.app.exit()
