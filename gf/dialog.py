@@ -203,22 +203,27 @@ class CommitMsgPrompt:
         return '\n\n'.join(filter(bool, [header, body, footer]))
 
 
-def stats_dialog(title: str, stage: List[tuple], modified: List[tuple], untracked: List[tuple]):
+def stats_dialog(branch: str, stage: List[str], modified: List[str], untracked: List[str]):
+    empty=[(None, HTML(f'<style bg="gray" fg="white">No files</style>'))]
+    values_stage = [(v, HTML(f'<style fg="green">{v}</style>')) for v in stage] or empty
+    values_modified = [(v, HTML(f'<style fg="red">{v}</style>')) for v in modified] or empty
+    values_untracked = [(v, HTML(f'<style fg="orange">{v}</style>')) for v in untracked] or empty
+
     frame_stage = Frame(
-                body = CheckboxList(values=stage),
+                body = CheckboxList(values=values_stage),
                 title = HTML(f'Changes to be committed: (After selecting file, press {ansired("Ctrl+R")} to unstage file)')
             ) 
     frame_modified = Frame(
-                body = CheckboxList(values=modified), 
+                body = CheckboxList(values=values_modified), 
                 title = HTML(f'Changes not staged for commit: (After selecting file, press {ansired("Ctrl+R")} to discard change, {ansired("Ctrl+A")} to stage file)')
             )
     frame_untracked = Frame(
-                body = CheckboxList(values=untracked),
+                body = CheckboxList(values=values_untracked),
                 title = HTML(f'Untracked files: (After selecting file, press {ansired("Ctrl+A")} to stage file, {ansired("Ctrl+I")} to ignore file.') 
             )
     root_container = HSplit(
         [
-            Label(HTML(f'(Press {ansired("N")} to switch window. {ansired("Up][Down")} to move cursor. {ansired("Enter")} to select. {ansired("Ctrl+C")} to quit.)')),
+            Label(HTML(f'on branch <style fg="orange">{branch}</style>\n (Press {ansired("N")} to switch window. {ansired("Up][Down")} to move cursor. {ansired("Enter")} to select. {ansired("Ctrl+C")} to quit.)')),
             # Window(BufferControl(buffer=buffer)),
             frame_stage, 
             frame_modified, 

@@ -113,7 +113,7 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
 @app.command()
 def status():
     staged, modified, untracked = index_status()
-    ret = stats_dialog('', staged, modified, untracked)
+    ret = stats_dialog(repo.head.reference.name, staged, modified, untracked)
     typer.echo(ret)
 
 
