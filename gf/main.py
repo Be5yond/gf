@@ -132,6 +132,12 @@ def status():
     ret = stats_dialog(repo.head.reference.name, staged, modified, untracked)
     typer.echo(ret)
 
+@app.command()
+def undo():
+    msg = repo.git.reset('HEAD^')
+    typer.echo(msg)
+    typer.echo(f'reset head to {repo.head.commit.hexsha[:8]}\t\t{repo.head.commit.message[:8]}')
+
 # @app.callback()
 # def main(verbose: bool = False):
 #     """
