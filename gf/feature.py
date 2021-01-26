@@ -1,7 +1,7 @@
 import typer
 from git import Repo
-from git.exc import GitCommandError
-from .dialog import radiolist_dialog
+from prompt_toolkit.formatted_text import HTML
+from .dialog import radiolist_dialog, ansired
 from .utils import no_traceback as nt
 
 app = typer.Typer(help='start/submit/delete a feature branch')
@@ -30,7 +30,7 @@ def submit(name: str = typer.Argument(repo.head.reference.name, help='branch nam
 def delete():
     values = [(head, head.name) for head in repo.heads if head.name.startswith('f')]
     result = radiolist_dialog(
-            title='Choose a branch to delete (Press [Enter] to confirm, [Esc] to cancel):',
+            title=HTML(f'Choose a branch to delete (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel):'),
             values=values)
     if not result:
         raise typer.Abort()

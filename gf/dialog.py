@@ -124,7 +124,7 @@ def radiolist_dialog(title='', values=None, style=None, async_=False):
     @bindings.add("escape")
     def exit_(event):
         """
-        Pressing Ctrl-d will exit the user interface.
+        Pressing Ctrl-c will exit the user interface.
         """
         event.app.exit()    
 
