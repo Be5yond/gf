@@ -85,23 +85,39 @@ def switch():
 @app.command()
 def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major version number. e.g: tag -M (v0.1.2 -> v1.0.0)'),
         minor: bool=typer.Option(False, '--minor', '-m', help='increse minor version number. e.g: tag -m (v0.1.2 -> v0.2.0)'),
-        patch: bool=typer.Option(False, '--minor', '-p', help='increse patch version number. e.g: tag -p (v0.1.2 -> v0.1.3)'),):
+        patch: bool=typer.Option(False, '--minor', '-p', help='increse patch version number. e.g: tag -p (v0.1.2 -> v0.1.3)'),
+        delete: bool=typer.Option(False, '--delete', '-d', help='chose tag to delete'),):
     """Use -M/-m/-p to create a tag in 'v{major}.{minor}.{patch}_{date}' format. The version number is self-increasing.
-       no-option: list tags.
+    no-option: list tags.
     """
+    # get latest tag name, default v0.0.0
     try:
         name = repo.tags[-1].name
     except IndexError:
         mj, mi, p = 0, 0, 0
     else:
         mj, mi, p, date = re.split('[._]', name[1:])
-
+    
+    # increse tag version number by cmd option
     if major:
         mj, mi, p = int(mj)+1, 0, 0
     elif minor:
         mi, p = int(mi)+1, 0
     elif patch:
         p = int(p)+1
+    elif delete:
+        try:
+            values = [(tag, tag.name) for tag in reversed(repo.tags)]
+            result = radiolist_dialog(
+                    title=HTML(f'Choose a tag to delete (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel):'),
+                    values=values)
+        except AssertionError:
+            pass
+        else: 
+            msg = repo.git.tag(result, d=True)
+            typer.echo(msg)
+        finally:
+            raise typer.Exit(0)
     else:
         for tag in reversed(repo.tags):
             typer.echo(tag.name)
@@ -115,7 +131,6 @@ def status():
     staged, modified, untracked = index_status()
     ret = stats_dialog(repo.head.reference.name, staged, modified, untracked)
     typer.echo(ret)
-
 
 # @app.callback()
 # def main(verbose: bool = False):
