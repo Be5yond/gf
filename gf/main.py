@@ -1,15 +1,13 @@
 import time
 import re
-from git import Repo, index
 import typer
 from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
 from . import feature, hotfix
 from .utils import no_traceback as nt
-from .utils import get_create_time, index_status
+from .utils import get_create_time, index_status, repo
 
 
-repo = Repo()
 app = typer.Typer()
 app.add_typer(feature.app, name='feature')
 app.add_typer(hotfix.app, name='hotfix')
@@ -79,7 +77,7 @@ def switch():
     if not result:
         raise typer.Abort()
     else:
-        nt(repo.git.checkout)(result.name)
+        nt(repo.git.switch)(result.name)
 
 
 @app.command()

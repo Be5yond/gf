@@ -2,10 +2,9 @@ import typer
 from git import Repo
 from prompt_toolkit.formatted_text import HTML
 from .dialog import radiolist_dialog, ansired
-from .utils import no_traceback as nt
+from .utils import no_traceback as nt, repo
 
 app = typer.Typer(help='start/submit/delete a feature branch')
-repo = Repo()
 
 
 @app.command()

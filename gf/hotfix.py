@@ -1,9 +1,8 @@
 import typer
 from git import Repo
-from .utils import no_traceback as nt
+from .utils import no_traceback as nt, repo
 
 app = typer.Typer(help='start/finish a hotfix branch')
-repo = Repo()
 
 
 def branch_validate(value: str):
