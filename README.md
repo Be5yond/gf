@@ -47,7 +47,7 @@ todo：详细说明
 <img src="https://github.com/Be5yond/gf/blob/main/doc/tag.png?raw=true" width="200px" />
 
 ## *gf undo*
-> todo
+> Un-does the last commit in git history.
 
 ## *gf log*
 > todo
