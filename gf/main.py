@@ -126,11 +126,13 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
     typer.echo(tag)
     repo.git.tag(tag)
 
+
 @app.command()
 def status():
     staged, modified, untracked = index_status()
     ret = stats_dialog(repo.head.reference.name, staged, modified, untracked)
     typer.echo(ret)
+
 
 @app.command()
 def undo():
@@ -138,6 +140,16 @@ def undo():
     typer.echo(msg)
     typer.echo(f'reset head to {repo.head.commit.hexsha[:8]}\t\t{repo.head.commit.message[:8]}')
 
+
+app.command('b', help='alias: branch')(branch)
+app.command('c', help='alias: commit')(commit)
+app.command('st', help='alias: status')(status)
+app.command('sw', help='alias: switch')(switch)
+app.command('t', help='alias: tag')(tag)
+app.command('i', help='alias: init')(init)
+app.command('r', help='alias: release')(release)
+app.add_typer(feature.app, name='f', help='alias: feature')
+app.add_typer(hotfix.app, name='h', help='alias: hotfix')
 # @app.callback()
 # def main(verbose: bool = False):
 #     """
