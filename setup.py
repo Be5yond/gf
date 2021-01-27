@@ -4,11 +4,11 @@ with open("README.md", "r", encoding="UTF-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="gf", 
+    name="gitflo", 
     version="0.0.1",
     author="Be5yond",
     author_email="beyond147896@126.com",
-    description="git-flow branch management",
+    description="git-flow branch management with standard commit format",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Be5yond/gf",

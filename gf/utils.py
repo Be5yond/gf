@@ -2,16 +2,14 @@ import os
 import re
 import git
 import typer
-import typer
-from git.exc import GitCommandError
-from git.exc import InvalidGitRepositoryError
+from git.exc import GitCommandError, InvalidGitRepositoryError
 
 
 def get_repo():
     try:
         ret = git.Repo()
     except InvalidGitRepositoryError as e:
-        typer.echo(f'not a git repository: {e}')
+        typer.secho(f'not a git repository: {e}', fg=typer.colors.RED)
         os._exit(0)
     else:
         return ret

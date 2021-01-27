@@ -1,10 +1,10 @@
 # gf
 a git-flow branch management
 
-# Supported Features
-
-
 # Installation
+```
+pip install gitflo
+```
 
 # Usage
 ## 1. Unified standard commit format
@@ -47,7 +47,7 @@ todo：详细说明
 <img src="https://github.com/Be5yond/gf/blob/main/doc/tag.png?raw=true" width="200px" />
 
 ## *gf undo*
-> Un-does the last commit in git history.
+> 撤销last commit提交, == *git reset "HEAD^"*
 
 ## *gf log*
 > todo
