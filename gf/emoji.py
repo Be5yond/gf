@@ -5,14 +5,15 @@ class Commit(Enum):
     FEATURE = '⚙️' 
     BUGFIX  = '🐛'
     REFACTOR = '♻️'
-    CHORE = '🛠️'
+    CHORE = '🧰'
     DOCUMENT = '📝'
-    STYLE = '🎵'
+    STYLE = '🎨'
     TEST = '🩺'
 
 
 class Change(Enum):
-    A = '➕'
-    M = 'Ⓜ️'
-    D = '➖' 
+    A = '➕' # new file
+    M = '🛠️' # modified
+    D = '➖' # deleted
+    R = '📇'   # renamed
 

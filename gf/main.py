@@ -5,7 +5,7 @@ from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
 from . import feature, hotfix
 from .utils import no_traceback as nt
-from .utils import get_create_time, index_status, repo
+from .utils import get_create_time, repo
 
 
 app = typer.Typer()
@@ -127,12 +127,14 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
 
 @app.command()
 def status():
+    'status info'
     ret = stats_dialog()
     typer.echo(ret)
 
 
 @app.command()
 def undo():
+    'undo last commit'
     msg = repo.git.reset('HEAD^')
     typer.echo(msg)
     typer.echo(f'reset head to {repo.head.commit.hexsha[:8]}\t\t{repo.head.commit.message[:8]}')
@@ -145,6 +147,7 @@ app.command('sw', help='alias: switch')(switch)
 app.command('t', help='alias: tag')(tag)
 app.command('i', help='alias: init')(init)
 app.command('r', help='alias: release')(release)
+app.command('u', help='alias: undo')(undo)
 app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
 
