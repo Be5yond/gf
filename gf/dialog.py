@@ -18,6 +18,7 @@ from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.bindings.focus import focus_next
+from . import emoji
 
 
 
@@ -149,13 +150,13 @@ class CommitMsgPrompt:
         result = radiolist_dialog(
             title=HTML(f'Choose a commit type: (Press {ansired("Enter")} to confirm, {ansired("Ctrl+C")} to cancel.)'),
             values=[
-                ('⚙️', HTML('<style bg="orange" fg="black">⚙️[feature], 新功能</style>')),
-                ('🐛', HTML('<style bg="green" fg="black">🐛[bugfix], 修复问题</style>')),
-                ('♻️', HTML('<style bg="red" fg="black">♻️[refactor], 重构</style>')),
-                ('🛠️', HTML('<style bg="blue" fg="black">🛠️[chore], 工具依赖变动</style>')),
-                ('📝', HTML('<style bg="gray" fg="white">📝[document], 文档或注释</style>')),
-                ('️🎵', HTML('<style bg="gray" fg="white">🎵[style], 格式</style>')),
-                ('️🩺', HTML('<style bg="gray" fg="white">🩺[test], 添加测试</style>'))
+                (emoji.Commit.FEATURE.value, HTML(f'<style bg="orange" fg="black">{emoji.Commit.FEATURE.value}[feature]:  新功能</style>')),
+                (emoji.Commit.BUGFIX.value, HTML(f'<style bg="green" fg="black">{emoji.Commit.BUGFIX.value}[bugfix]:   修复问题</style>')),
+                (emoji.Commit.REFACTOR.value, HTML(f'<style bg="red" fg="black">{emoji.Commit.REFACTOR.value}[refactor]: 重构</style>')),
+                (emoji.Commit.CHORE.value, HTML(f'<style bg="blue" fg="black">{emoji.Commit.CHORE.value}[chore]:    工具依赖变动</style>')),
+                (emoji.Commit.DOCUMENT.value, HTML(f'<style bg="gray" fg="white">{emoji.Commit.DOCUMENT.value}[document]: 文档或注释</style>')),
+                (emoji.Commit.STYLE.value, HTML(f'<style bg="gray" fg="white">{emoji.Commit.STYLE.value}[style]:    格式</style>')),
+                (emoji.Commit.TEST.value, HTML(f'<style bg="gray" fg="white">{emoji.Commit.TEST.value}[test]:     添加测试</style>'))
             ])
         return result    
 
@@ -203,10 +204,19 @@ class CommitMsgPrompt:
         return '\n\n'.join(filter(bool, [header, body, footer]))
 
 
-def stats_dialog(branch: str, stage: List[str], modified: List[str], untracked: List[str]):
+def stats_dialog():
+    from git import Repo
+    repo = Repo()
+    branch = repo.head.reference.name
+    # 获取暂存区的diff
+    staged = [diff for diff in repo.head.commit.diff()]
+    # 获取workspace的diff
+    modified = [diff for diff in repo.index.diff(None)]
+    untracked = repo.untracked_files
+
     empty=[(None, HTML(f'<style bg="gray" fg="white">No files</style>'))]
-    values_stage = [(v, HTML(f'<style fg="green">{v}</style>')) for v in stage] or empty
-    values_modified = [(v, HTML(f'<style fg="red">{v}</style>')) for v in modified] or empty
+    values_stage = [(v, HTML(f'{emoji.Change.__getattr__(v.change_type).value} <style fg="green">{v.a_path}</style>')) for v in staged] or empty
+    values_modified = [(v, HTML(f'{emoji.Change.__getattr__(v.change_type).value} <style fg="red">{v.a_path}</style>')) for v in modified] or empty
     values_untracked = [(v, HTML(f'<style fg="orange">{v}</style>')) for v in untracked] or empty
 
     frame_stage = Frame(
@@ -231,8 +241,6 @@ def stats_dialog(branch: str, stage: List[str], modified: List[str], untracked: 
         ]
     )
 
-    from git import Repo
-    repo = Repo()
 
     kb = KeyBindings()
     kb.add("n")(focus_next)
@@ -243,18 +251,21 @@ def stats_dialog(branch: str, stage: List[str], modified: List[str], untracked: 
     @kb.add("c-a")
     def _(event):
         "add file to stage"
-        for file in frame_modified.body.current_values:
-            repo.index.add(file)
-        for file in frame_untracked.body.current_values:
-            repo.index.add(file)
+        for diff in frame_modified.body.current_values:
+            if diff.change_type == 'D':
+                repo.index.remove(diff.a_path)
+            else:
+                repo.index.add(diff.a_path)
+        for diff in frame_untracked.body.current_values:
+            repo.index.add(diff.a_path)
         event.app.exit()
 
     @kb.add("c-r")
     def _(event):
-        for file in frame_stage.body.current_values:
-            repo.git.restore(file, staged=True)
-        for file in frame_modified.body.current_values:
-            repo.index.checkout(file, force=True)
+        for diff in frame_stage.body.current_values:
+            repo.git.restore(diff.a_path, staged=True)
+        for diff in frame_modified.body.current_values:
+            repo.index.checkout(diff.a_path, force=True)
         event.app.exit()
 
     @kb.add("c-i")

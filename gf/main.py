@@ -127,8 +127,7 @@ def tag(major: bool=typer.Option(False, '--major', '-M', help='increse major ver
 
 @app.command()
 def status():
-    staged, modified, untracked = index_status()
-    ret = stats_dialog(repo.head.reference.name, staged, modified, untracked)
+    ret = stats_dialog()
     typer.echo(ret)
 
 
@@ -148,13 +147,7 @@ app.command('i', help='alias: init')(init)
 app.command('r', help='alias: release')(release)
 app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
-# @app.callback()
-# def main(verbose: bool = False):
-#     """
-#     Manage users in the awesome CLI app.
-#     """
-#     if verbose:
-#         typer.echo("Will write verbose output")
+
 
 
 def main():
