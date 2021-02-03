@@ -2,7 +2,7 @@ import time
 import re
 import typer
 from prompt_toolkit.formatted_text import HTML
-from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
+from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired, log_dialog
 from . import feature, hotfix
 from .utils import no_traceback as nt
 from .utils import get_create_time, repo
@@ -140,6 +140,11 @@ def undo():
     typer.echo(f'reset head to {repo.head.commit.hexsha[:8]}\t\t{repo.head.commit.message[:8]}')
 
 
+@app.command()
+def log(n: str = typer.Argument(0, help='skip fisrt n commits')):
+    log_dialog(n)
+
+
 app.command('b', help='alias: branch')(branch)
 app.command('c', help='alias: commit')(commit)
 app.command('st', help='alias: status')(status)
@@ -148,6 +153,7 @@ app.command('t', help='alias: tag')(tag)
 app.command('i', help='alias: init')(init)
 app.command('r', help='alias: release')(release)
 app.command('u', help='alias: undo')(undo)
+app.command('l', help='alias: log')(log)
 app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
 

@@ -1,5 +1,4 @@
 import typer
-from git import Repo
 from prompt_toolkit.formatted_text import HTML
 from .dialog import radiolist_dialog, ansired
 from .utils import no_traceback as nt, repo
@@ -36,10 +35,7 @@ def delete():
     if repo.head.reference == result:
         nt(repo.git.checkout)('develop')
     nt(repo.delete_head)(result)
-    # except GitCommandError as e:
-    #     typer.echo(e)
-    # else:
-    #     typer.echo(f'delete branch {result.name}')
+
 
 @app.command()
 def finish(name: str = typer.Argument(repo.head.reference.name, help='branch name')):

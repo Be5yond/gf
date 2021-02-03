@@ -2,15 +2,14 @@ from __future__ import unicode_literals
 import pathlib
 from typing import List, Sequence, Tuple, TypeVar
 from prompt_toolkit.application import Application
-from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent as E
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.controls import FormattedTextControl,BufferControl
-from prompt_toolkit.layout.containers import Window, HSplit
+from prompt_toolkit.layout.containers import Window, HSplit, VSplit
 from prompt_toolkit.layout.margins import ConditionalMargin, ScrollbarMargin
-from prompt_toolkit.widgets import Label, Frame, CheckboxList
+from prompt_toolkit.widgets import Label, Frame, CheckboxList, VerticalLine, HorizontalLine, Box
 from prompt_toolkit.widgets.base import _DialogList
 
 from prompt_toolkit.formatted_text import AnyFormattedText, HTML, to_formatted_text
@@ -127,21 +126,21 @@ def radiolist_dialog(title='', values=None, style=None, async_=False):
         """
         Pressing Ctrl-c will exit the user interface.
         """
-        event.app.exit()    
+        event.app.exit()
 
-    radio_list = SingleSelectList(values)        
+    radio_list = SingleSelectList(values)
     application = Application(
         layout=Layout(HSplit([Label(title), radio_list])),
         key_bindings=bindings,
         mouse_support=True,
-        style=style,        
+        style=style,
         full_screen=False,
         )
 
     if async_:
         return application.run_async()
     else:
-        return application.run()   
+        return application.run()
 
 
 class CommitMsgPrompt:
@@ -158,7 +157,7 @@ class CommitMsgPrompt:
                 (emoji.Commit.STYLE.value, HTML(f'<style bg="gray" fg="white">{emoji.Commit.STYLE.value}[style]:    格式</style>')),
                 (emoji.Commit.TEST.value, HTML(f'<style bg="gray" fg="white">{emoji.Commit.TEST.value}[test]:     添加测试</style>'))
             ])
-        return result    
+        return result
 
     @staticmethod
     def title():
@@ -182,7 +181,7 @@ class CommitMsgPrompt:
         def _(event):
             event.app.exit(result=event.app.current_buffer.text)
 
-        return prompt('body: ', rprompt='gf', bottom_toolbar=bottom_toolbar(), multiline=True, key_bindings=kb, default='1.') 
+        return prompt('body: ', rprompt='gf', bottom_toolbar=bottom_toolbar(), multiline=True, key_bindings=kb, default='1.')
 
     @staticmethod
     def footer():
@@ -222,21 +221,21 @@ def stats_dialog():
     frame_stage = Frame(
                 body = CheckboxList(values=values_stage),
                 title = HTML(f'Changes to be committed: (After selecting file, press {ansired("Ctrl+R")} to unstage file)')
-            ) 
+            )
     frame_modified = Frame(
-                body = CheckboxList(values=values_modified), 
+                body = CheckboxList(values=values_modified),
                 title = HTML(f'Changes not staged for commit: (After selecting file, press {ansired("Ctrl+R")} to discard change, {ansired("Ctrl+A")} to stage file)')
             )
     frame_untracked = Frame(
                 body = CheckboxList(values=values_untracked),
-                title = HTML(f'Untracked files: (After selecting file, press {ansired("Ctrl+A")} to stage file, {ansired("Ctrl+I")} to ignore file.') 
+                title = HTML(f'Untracked files: (After selecting file, press {ansired("Ctrl+A")} to stage file, {ansired("Ctrl+I")} to ignore file.')
             )
     root_container = HSplit(
         [
             Label(HTML(f'on branch <style fg="orange">{branch}</style>\n (Press {ansired("N")} to switch window. {ansired("Up][Down")} to move cursor. {ansired("Enter")} to select. {ansired("Ctrl+C")} to quit.)')),
             # Window(BufferControl(buffer=buffer)),
-            frame_stage, 
-            frame_modified, 
+            frame_stage,
+            frame_modified,
             frame_untracked
         ]
     )
@@ -285,3 +284,61 @@ def stats_dialog():
     )
     return application.run()
 
+
+def log_dialog(n):
+    from git import Repo
+    repo = Repo()
+    commits = [c for c in repo.iter_commits('main', max_count=10, skip=n)]
+    header = VSplit([
+        Label(HTML('Num'), width=4),
+        Window(width=1, char="|"),
+        Label(HTML('Commit'), width=8),
+        Window(width=1, char="|"),
+        Label(HTML('Author'), width=20),
+        Window(width=1, char="|"),
+        Label('Date', width=21),
+        Window(width=1, char="|"),
+        Label('Description') 
+    ])
+    def row(cmt):
+        message = cmt.message.split('\n')[0]
+        if cmt == repo.head.commit:
+            message = '<b><style bg="ansigreen" fg="ansiblack">[HEAD]</style></b>'+message
+        for head in repo.heads:
+            if cmt == head.commit:
+                message = f'<b><style bg="ansiyellow" fg="ansiblack">[️{head.name}]</style></b>'+message
+        return VSplit([
+            Window(content=FormattedTextControl(f'{cmt.count()}'), width=4),
+            Window(width=1, char="|"),
+            Window(content=FormattedTextControl(cmt.hexsha[:7]), width=8),
+            Window(width=1, char="|"),
+            Window(content=FormattedTextControl(cmt.committer.name), width=20),
+            Window(width=1, char="|"),
+            Window(content=FormattedTextControl(cmt.committed_datetime.strftime('%Y-%m-%d %H:%M:%S')), width=21),
+            Window(width=1, char="|"),
+            Label(HTML(message))
+        ])
+    body = HSplit([row(cmt) for cmt in commits])
+    root_container = HSplit([
+        Window(height=1, char="-"),  
+        header,
+        Window(height=1, char="-"),  
+        body
+    ]
+    )
+
+    kb = KeyBindings()
+    @kb.add("c-c", eager=True)
+    @kb.add("<any>", eager=True)
+    def _(event):
+        event.app.exit()
+
+    application = Application(
+        layout=Layout(root_container),
+        key_bindings=kb,
+        # Let's add mouse support!
+        mouse_support=True,
+        # It switches the terminal to an alternate screen.
+        full_screen=False
+    )
+    return application.run()
