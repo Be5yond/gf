@@ -50,4 +50,4 @@ todo：详细说明
 > 撤销last commit提交, == *git reset "HEAD^"*
 
 ## *gf log*
-> todo
+![status](https://github.com/Be5yond/gf/blob/main/doc/log.png?raw=true)
