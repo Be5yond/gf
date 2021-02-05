@@ -18,6 +18,7 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.bindings.focus import focus_next
 from . import emoji
+from .utils import repo
 
 
 
@@ -204,8 +205,6 @@ class CommitMsgPrompt:
 
 
 def stats_dialog():
-    from git import Repo
-    repo = Repo()
     branch = repo.head.reference.name
     # 获取暂存区的diff
     staged = [diff for diff in repo.head.commit.diff()]
@@ -285,10 +284,8 @@ def stats_dialog():
     return application.run()
 
 
-def log_dialog(n):
-    from git import Repo
-    repo = Repo()
-    commits = [c for c in repo.iter_commits('main', max_count=10, skip=n)]
+def log_dialog(n, max_count=10):
+    commits = [c for c in repo.iter_commits('main', skip=n, max_count=max_count)]
     header = VSplit([
         Label(HTML('Num'), width=4),
         Window(width=1, char="|"),
@@ -302,11 +299,20 @@ def log_dialog(n):
     ])
     def row(cmt):
         message = cmt.message.split('\n')[0]
-        if cmt == repo.head.commit:
-            message = '<b><style bg="ansigreen" fg="ansiblack">[HEAD]</style></b>'+message
+
+        # 添加分支信息
+        for ref in repo.remote().refs:
+            if cmt == ref.commit:
+                message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
+        for tag in repo.tags:
+            if cmt == tag.commit:
+                message = f'<b><style bg="ansiyellow" fg="ansiblack">[️Tag:{tag.name}]</style></b>'+message
         for head in repo.heads:
             if cmt == head.commit:
-                message = f'<b><style bg="ansiyellow" fg="ansiblack">[️{head.name}]</style></b>'+message
+                message = f'<b><style bg="ansigreen" fg="ansiblack">[️{head.name}]</style></b>'+message
+        if cmt == repo.head.commit:
+            message = '<b><style bg="ansiblue" fg="ansiblack">[HEAD]</style></b>'+message
+
         return VSplit([
             Window(content=FormattedTextControl(f'{cmt.count()}'), width=4),
             Window(width=1, char="|"),
