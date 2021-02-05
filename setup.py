@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="UTF-8") as fh:
 
 setuptools.setup(
     name="gitflo", 
-    version="0.0.1",
+    version="0.0.2",
     author="Be5yond",
     author_email="beyond147896@126.com",
     description="git-flow branch management with standard commit format",

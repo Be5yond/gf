@@ -287,9 +287,9 @@ def stats_dialog():
 def log_dialog(n, max_count=10):
     commits = [c for c in repo.iter_commits('main', skip=n, max_count=max_count)]
     header = VSplit([
-        Label(HTML('Num'), width=4),
+        Label(HTML('Num'), width=5),
         Window(width=1, char="|"),
-        Label(HTML('Commit'), width=8),
+        Label(HTML('Commit'), width=9),
         Window(width=1, char="|"),
         Label(HTML('Author'), width=20),
         Window(width=1, char="|"),
@@ -314,9 +314,9 @@ def log_dialog(n, max_count=10):
             message = '<b><style bg="ansiblue" fg="ansiblack">[HEAD]</style></b>'+message
 
         return VSplit([
-            Window(content=FormattedTextControl(f'{cmt.count()}'), width=4),
+            Window(content=FormattedTextControl(f'{cmt.count()}'), width=5),
             Window(width=1, char="|"),
-            Window(content=FormattedTextControl(cmt.hexsha[:7]), width=8),
+            Window(content=FormattedTextControl(cmt.hexsha[:7]), width=9),
             Window(width=1, char="|"),
             Window(content=FormattedTextControl(cmt.committer.name), width=20),
             Window(width=1, char="|"),
