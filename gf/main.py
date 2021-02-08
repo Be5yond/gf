@@ -53,15 +53,24 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
 def branch():
     """ list branchs in this repository"""
     current_branch = repo.head.reference
+    typer.secho(f'  {"Local":<20} {"Remote":<20} Sync  Date', fg=typer.colors.BRIGHT_MAGENTA)
+    typer.secho('-'*58, fg=typer.colors.BRIGHT_MAGENTA)
     for head in repo.heads:
         date = get_create_time(head.name)
+        try:
+            remote = head.tracking_branch().name
+            syn = len(list(repo.iter_commits(f'{remote}..{head}'))) - len(list(repo.iter_commits(f'{head}..{remote}')))
+            syn = f'{syn:+}'
+        except AttributeError:
+            remote = ''
+            syn = ''
         if head == current_branch:
             color = typer.colors.GREEN
             prefix = '*'
         else:
             color = typer.colors.WHITE
             prefix = ' '
-        typer.secho(f'{prefix} {head.name:<30}{date}', fg=color)
+        typer.secho(f'{prefix} {head.name:<20} {remote:<20} {syn:<5} {date}', fg=color)
 
 
 @app.command()
