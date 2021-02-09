@@ -29,11 +29,11 @@ def no_traceback(f):
     return _wapper
 
 
-def get_create_time(branch_name: str):
+def get_create_date(branch_name: str):
     """Get branch creation time"""
     txt = repo.git.reflog(branch_name, date='short')
     try:
         dates = re.findall('{[\d-]+}', txt)
-        return dates[-1]
+        return dates[-1].strip('{}')
     except IndexError:
         return ''

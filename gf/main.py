@@ -5,7 +5,7 @@ from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired, log_dialog
 from . import feature, hotfix
 from .utils import no_traceback as nt
-from .utils import get_create_time, repo
+from .utils import get_create_date, repo
 
 
 app = typer.Typer()
@@ -49,14 +49,35 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
     repo.index.commit(message)
 
 
+# @app.command()
+# def branch():
+#     """ list branchs in this repository"""
+#     current_branch = repo.head.reference
+#     typer.secho(f'  {"Local":<20} {"Remote":<20} Sync  Date', fg=typer.colors.BRIGHT_MAGENTA)
+#     typer.secho('-'*58, fg=typer.colors.BRIGHT_MAGENTA)
+#     for head in repo.heads:
+#         date = get_create_date(head.name)
+#         try:
+#             remote = head.tracking_branch().name
+#             syn = len(list(repo.iter_commits(f'{remote}..{head}'))) - len(list(repo.iter_commits(f'{head}..{remote}')))
+#             syn = f'{syn:+}'
+#         except AttributeError:
+#             remote = ''
+#             syn = ''
+#         if head == current_branch:
+#             color = typer.colors.GREEN
+#             prefix = '*'
+#         else:
+#             color = typer.colors.WHITE
+#             prefix = ' '
+#         typer.secho(f'{prefix} {head.name:<20} {remote:<20} {syn:<5} {date}', fg=color)
+
+
 @app.command()
 def branch():
-    """ list branchs in this repository"""
-    current_branch = repo.head.reference
-    typer.secho(f'  {"Local":<20} {"Remote":<20} Sync  Date', fg=typer.colors.BRIGHT_MAGENTA)
-    typer.secho('-'*58, fg=typer.colors.BRIGHT_MAGENTA)
-    for head in repo.heads:
-        date = get_create_time(head.name)
+    """ list branchs info this repository. switch between local branch, push or pull from remote branch"""
+    def row(head):
+        date = get_create_date(head.name)
         try:
             remote = head.tracking_branch().name
             syn = len(list(repo.iter_commits(f'{remote}..{head}'))) - len(list(repo.iter_commits(f'{head}..{remote}')))
@@ -64,24 +85,15 @@ def branch():
         except AttributeError:
             remote = ''
             syn = ''
-        if head == current_branch:
-            color = typer.colors.GREEN
-            prefix = '*'
-        else:
-            color = typer.colors.WHITE
-            prefix = ' '
-        typer.secho(f'{prefix} {head.name:<20} {remote:<20} {syn:<5} {date}', fg=color)
-
-
-@app.command()
-def switch():
-    """ switch branch
-    """
+        return f'{head.name:<20} {remote:<20} {syn:<5} {date}'
     current_branch = repo.head.reference
-    values = [(head, head.name) for head in repo.heads if not head == current_branch]
-    values.insert(0, (current_branch, HTML(f'<style fg="green">{current_branch.name}</style>')))
+    values = [(head, row(head)) for head in repo.heads if not head == current_branch]
+    values.insert(0, (current_branch, HTML(f'<style fg="ansigreen">{row(current_branch)}</style>')))
     result = radiolist_dialog(
-            title=HTML(f'Checkout to branch (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel):'),
+            title=HTML(
+            f'''Checkout to branch (Press {ansired("Enter")} to confirm, {ansired("Esc")} to cancel):
+<b><style fg="ansiyellow">    {"Local":<20} {"Remote":<20} Sync  Date</style></b>
+{"-":-<63}'''),
             values=values)
     if not result:
         raise typer.Abort()
@@ -157,8 +169,7 @@ def log(skip: int=typer.Argument(0, help='Skip number commits before starting to
 
 app.command('b', help='alias: branch')(branch)
 app.command('c', help='alias: commit')(commit)
-app.command('st', help='alias: status')(status)
-app.command('sw', help='alias: switch')(switch)
+app.command('s', help='alias: status')(status)
 app.command('t', help='alias: tag')(tag)
 app.command('i', help='alias: init')(init)
 app.command('r', help='alias: release')(release)
