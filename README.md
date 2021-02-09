@@ -32,8 +32,8 @@ todo：详细说明
 
 
 # interface 
-## *gf switch*
-![switch](https://github.com/Be5yond/gf/blob/main/doc/switch.png?raw=true)
+## *gf branch*
+![switch](https://github.com/Be5yond/gf/blob/main/doc/branch.png?raw=true)
 
 ## *gf status*
 > 合并 git status & git add & git restore部分功能   
