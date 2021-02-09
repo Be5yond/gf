@@ -138,9 +138,8 @@ def undo():
 
 
 @app.command()
-def log(skip: int=typer.Argument(0, help='Skip number commits before starting to show the commit output.'), 
-        size: int=typer.Argument(10, help='Limit the number of commits to output.')):
-    log_dialog(skip, size)
+def log(size: int=typer.Argument(15, help='Limit the number of commits to output.')):
+    log_dialog(size)
 
 
 app.command('b', help='alias: branch')(branch)

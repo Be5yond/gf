@@ -21,8 +21,9 @@ from . import emoji
 from .utils import repo
 
 
-
 _T = TypeVar("_T")
+page = 0
+
 
 def ansired(key: str) -> str:
     return f'<b><style bg="ansired">[{key}]</style></b>'
@@ -120,9 +121,9 @@ class SingleSelectList(_DialogList):
 
 def radiolist_dialog(title='', values=None, style=None, async_=False):
     # Add exit key binding.
-    bindings = KeyBindings()
-    @bindings.add('c-c')
-    @bindings.add("escape")
+    kb = KeyBindings()
+    @kb.add('c-c')
+    @kb.add("escape")
     def exit_(event):
         """
         Pressing Ctrl-c will exit the user interface.
@@ -132,12 +133,11 @@ def radiolist_dialog(title='', values=None, style=None, async_=False):
     radio_list = SingleSelectList(values)
     application = Application(
         layout=Layout(HSplit([Label(title), radio_list])),
-        key_bindings=bindings,
+        key_bindings=kb,
         mouse_support=True,
         style=style,
         full_screen=False,
         )
-
     if async_:
         return application.run_async()
     else:
@@ -239,7 +239,6 @@ def stats_dialog():
         ]
     )
 
-
     kb = KeyBindings()
     kb.add("n")(focus_next)
     @kb.add("c-c", eager=True)
@@ -284,8 +283,10 @@ def stats_dialog():
     return application.run()
 
 
-def log_dialog(n, max_count=10):
-    commits = [c for c in repo.iter_commits('main', skip=n, max_count=max_count)]
+def log_dialog(max_count=10):
+    branch = repo.head.reference.name
+    commits = [c for c in repo.iter_commits(branch, skip=0, max_count=max_count)]
+    help = Label(HTML(f'(Press {ansired("n][Down")} or {ansired("b][Up")} to turn pages. {ansired("Ctrl+C][Esc")} to abort)'))
     header = VSplit([
         Label(HTML('Num'), width=5),
         Window(width=1, char="|"),
@@ -295,11 +296,12 @@ def log_dialog(n, max_count=10):
         Window(width=1, char="|"),
         Label('Date', width=21),
         Window(width=1, char="|"),
-        Label('Description') 
+        Label('Description')
     ])
+
     def row(cmt):
         message = cmt.message.split('\n')[0]
-
+        
         # 添加分支信息
         for ref in repo.remote().refs:
             if cmt == ref.commit:
@@ -324,26 +326,48 @@ def log_dialog(n, max_count=10):
             Window(width=1, char="|"),
             Label(HTML(message))
         ])
+
     body = HSplit([row(cmt) for cmt in commits])
+
     root_container = HSplit([
-        Window(height=1, char="-"),  
+        help,
+        Window(height=1, char="-"), 
         header,
-        Window(height=1, char="-"),  
+        Window(height=1, char="-"), 
         body
-    ]
-    )
+    ])
 
     kb = KeyBindings()
     @kb.add("c-c", eager=True)
-    @kb.add("<any>", eager=True)
+    @kb.add("escape")
     def _(event):
         event.app.exit()
+
+    @kb.add('n')
+    @kb.add('down')
+    def _(event):
+        global page
+        page += max_count
+        commits = [c for c in repo.iter_commits(branch, skip=page, max_count=max_count)]
+        if not commits:
+            event.app.exit()
+        body.children = [row(cmt) for cmt in commits]
+        event.app.layout.reset()
+
+    @kb.add('b')
+    @kb.add('up')
+    def _(event):
+        global page
+        page = max(page-max_count, 0)
+        commits = [c for c in repo.iter_commits(branch, skip=page, max_count=max_count)]
+        body.children = [row(cmt) for cmt in commits]
+        event.app.layout.reset()
 
     application = Application(
         layout=Layout(root_container),
         key_bindings=kb,
         # Let's add mouse support!
-        mouse_support=True,
+        mouse_support=False,
         # It switches the terminal to an alternate screen.
         full_screen=False
     )
