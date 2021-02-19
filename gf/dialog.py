@@ -286,7 +286,7 @@ def stats_dialog():
 def log_dialog(max_count=10):
     branch = repo.head.reference.name
     commits = [c for c in repo.iter_commits(branch, skip=0, max_count=max_count)]
-    help = Label(HTML(f'(Press {ansired("n][Down")} or {ansired("b][Up")} to turn pages. {ansired("Ctrl+C][Esc")} to abort)'))
+    help = Label(HTML(f'(Press {ansired("n][Down")} or {ansired("b][Up")} to turn pages. {ansired("Ctrl+C][Esc")} to quit)'))
     header = VSplit([
         Label(HTML('Num'), width=5),
         Window(width=1, char="|"),
@@ -296,13 +296,15 @@ def log_dialog(max_count=10):
         Window(width=1, char="|"),
         Label('Date', width=21),
         Window(width=1, char="|"),
+        Label('Stats', width=10),
+        Window(width=1, char="|"),
         Label('Description')
     ])
 
     def row(cmt):
         message = cmt.message.split('\n')[0]
         
-        # 添加分支信息
+        # 添加分支和tag信息
         for ref in repo.remote().refs:
             if cmt == ref.commit:
                 message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
@@ -323,6 +325,9 @@ def log_dialog(max_count=10):
             Window(content=FormattedTextControl(cmt.committer.name), width=20),
             Window(width=1, char="|"),
             Window(content=FormattedTextControl(cmt.committed_datetime.strftime('%Y-%m-%d %H:%M:%S')), width=21),
+            Window(width=1, char="|"),
+            Label(HTML(f'<b><style fg="ansigreen">+{cmt.stats.total["insertions"]}</style></b>'), width=5),
+            Label(HTML(f'<b><style fg="ansired">-{cmt.stats.total["deletions"]}</style></b>'), width=5),
             Window(width=1, char="|"),
             Label(HTML(message))
         ])
