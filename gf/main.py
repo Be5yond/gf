@@ -2,10 +2,12 @@ import time
 import re
 import typer
 from prompt_toolkit.formatted_text import HTML
-from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired, log_dialog
+from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
+from .log import log_dialog
 from . import feature, hotfix
 from .utils import no_traceback as nt
 from .utils import get_create_date, repo
+from .db import GfDB
 
 
 app = typer.Typer()
@@ -21,6 +23,9 @@ def init():
     repo.git.branch('develop')
     repo.git.branch('release')
     repo.git.branch('test')
+    with GfDB() as d:
+        d.create_table()
+
 
 
 @app.command()

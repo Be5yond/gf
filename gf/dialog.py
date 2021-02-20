@@ -6,10 +6,10 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent as E
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.layout.controls import FormattedTextControl,BufferControl
-from prompt_toolkit.layout.containers import Window, HSplit, VSplit
+from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.containers import Window, HSplit
 from prompt_toolkit.layout.margins import ConditionalMargin, ScrollbarMargin
-from prompt_toolkit.widgets import Label, Frame, CheckboxList, VerticalLine, HorizontalLine, Box
+from prompt_toolkit.widgets import Label, Frame, CheckboxList 
 from prompt_toolkit.widgets.base import _DialogList
 
 from prompt_toolkit.formatted_text import AnyFormattedText, HTML, to_formatted_text
@@ -22,7 +22,6 @@ from .utils import repo
 
 
 _T = TypeVar("_T")
-page = 0
 
 
 def ansired(key: str) -> str:
@@ -282,98 +281,3 @@ def stats_dialog():
     )
     return application.run()
 
-
-def log_dialog(max_count=10):
-    branch = repo.head.reference.name
-    commits = [c for c in repo.iter_commits(branch, skip=0, max_count=max_count)]
-    help = Label(HTML(f'(Press {ansired("n][Down")} or {ansired("b][Up")} to turn pages. {ansired("Ctrl+C][Esc")} to quit)'))
-    header = VSplit([
-        Label(HTML('Num'), width=5),
-        Window(width=1, char="|"),
-        Label(HTML('Commit'), width=9),
-        Window(width=1, char="|"),
-        Label(HTML('Author'), width=20),
-        Window(width=1, char="|"),
-        Label('Date', width=21),
-        Window(width=1, char="|"),
-        Label('Stats', width=10),
-        Window(width=1, char="|"),
-        Label('Description')
-    ])
-
-    def row(cmt):
-        message = cmt.message.split('\n')[0]
-        
-        # 添加分支和tag信息
-        for ref in repo.remote().refs:
-            if cmt == ref.commit:
-                message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
-        for tag in repo.tags:
-            if cmt == tag.commit:
-                message = f'<b><style bg="ansiyellow" fg="ansiblack">[️Tag:{tag.name}]</style></b>'+message
-        for head in repo.heads:
-            if cmt == head.commit:
-                message = f'<b><style bg="ansigreen" fg="ansiblack">[️{head.name}]</style></b>'+message
-        if cmt == repo.head.commit:
-            message = '<b><style bg="ansiblue" fg="ansiblack">[HEAD]</style></b>'+message
-
-        return VSplit([
-            Window(content=FormattedTextControl(f'{cmt.count()}'), width=5),
-            Window(width=1, char="|"),
-            Window(content=FormattedTextControl(cmt.hexsha[:7]), width=9),
-            Window(width=1, char="|"),
-            Window(content=FormattedTextControl(cmt.committer.name), width=20),
-            Window(width=1, char="|"),
-            Window(content=FormattedTextControl(cmt.committed_datetime.strftime('%Y-%m-%d %H:%M:%S')), width=21),
-            Window(width=1, char="|"),
-            Label(HTML(f'<b><style fg="ansigreen">+{cmt.stats.total["insertions"]}</style></b>'), width=5),
-            Label(HTML(f'<b><style fg="ansired">-{cmt.stats.total["deletions"]}</style></b>'), width=5),
-            Window(width=1, char="|"),
-            Label(HTML(message))
-        ])
-
-    body = HSplit([row(cmt) for cmt in commits])
-
-    root_container = HSplit([
-        help,
-        Window(height=1, char="-"), 
-        header,
-        Window(height=1, char="-"), 
-        body
-    ])
-
-    kb = KeyBindings()
-    @kb.add("c-c", eager=True)
-    @kb.add("escape")
-    def _(event):
-        event.app.exit()
-
-    @kb.add('n')
-    @kb.add('down')
-    def _(event):
-        global page
-        page += max_count
-        commits = [c for c in repo.iter_commits(branch, skip=page, max_count=max_count)]
-        if not commits:
-            event.app.exit()
-        body.children = [row(cmt) for cmt in commits]
-        event.app.layout.reset()
-
-    @kb.add('b')
-    @kb.add('up')
-    def _(event):
-        global page
-        page = max(page-max_count, 0)
-        commits = [c for c in repo.iter_commits(branch, skip=page, max_count=max_count)]
-        body.children = [row(cmt) for cmt in commits]
-        event.app.layout.reset()
-
-    application = Application(
-        layout=Layout(root_container),
-        key_bindings=kb,
-        # Let's add mouse support!
-        mouse_support=False,
-        # It switches the terminal to an alternate screen.
-        full_screen=False
-    )
-    return application.run()
