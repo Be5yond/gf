@@ -93,7 +93,11 @@ class GfDB:
     def fetch(self, cmt, *keys):
         values = ','.join(keys) or '*'
         sql = f'''SELECT {values} from commits where id = '{cmt.hexsha}';'''
-        self.cur.execute(sql)
+        try:
+            self.cur.execute(sql)
+        except sqlite3.OperationalError as e:
+            print(e)
+            self.create_table()
         return self.cur.fetchone()
 
     def insert(self, cmt):
