@@ -127,6 +127,13 @@ class GfDB:
         return num, ins, de
 
     def all(self):
-        sql = f'''SELECT * from commits;'''
+        sql = f'''SELECT * FROM commits;'''
         self.cur.execute(sql)
         return self.cur.fetchall()
+
+    def rank(self):
+        "代码贡献行数排名"
+        sql = f'''SELECT author, COUNT(*), SUM(insertions), SUM(deletions), MIN(date), MAX(date) FROM commits GROUP BY author ORDER BY count(*) DESC;'''
+        return self.cur.execute(sql).fetchall() 
+
+

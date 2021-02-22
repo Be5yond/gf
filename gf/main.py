@@ -4,10 +4,11 @@ import typer
 from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
 from .log import log_dialog
-from . import feature, hotfix
+from . import feature, hotfix 
 from .utils import no_traceback as nt
 from .utils import get_create_date, repo
 from .db import GfDB
+from .inspect import rank, sync
 
 
 app = typer.Typer()
@@ -51,7 +52,9 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
     if not message:
         raise typer.Abort()
     typer.echo(message)
-    repo.index.commit(message)
+    cmt = repo.index.commit(message)
+    with GfDB() as d:
+        d.setdefault(cmt)
 
 
 @app.command()
@@ -147,6 +150,19 @@ def log(size: int=typer.Argument(15, help='Limit the number of commits to output
     log_dialog(size)
 
 
+@app.command()
+def inspect(sync: bool=typer.Option(False, '--sync', '-s', help='synchronize latest commits to statistics')):
+    "statistics of the submitter activity"
+    import time
+    now = time.time()
+    if sync:
+        sync()
+    rank()
+    end = time.time()
+    print(end - now)
+    
+
+
 app.command('b', help='alias: branch')(branch)
 app.command('c', help='alias: commit')(commit)
 app.command('s', help='alias: status')(status)
@@ -155,6 +171,7 @@ app.command('i', help='alias: init')(init)
 app.command('r', help='alias: release')(release)
 app.command('u', help='alias: undo')(undo)
 app.command('l', help='alias: log')(log)
+app.command('ins', help='alias: inspect')(inspect)
 app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
 
