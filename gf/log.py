@@ -1,3 +1,4 @@
+from configparser import NoSectionError
 from prompt_toolkit.application import Application
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout import Layout
@@ -17,9 +18,12 @@ def row(cmt, num, ins, de):
     message = cmt.message.split('\n')[0]
     
     # 添加分支和tag信息
-    for ref in repo.remote().refs:
-        if cmt == ref.commit:
-            message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
+    try:
+        for ref in repo.remote().refs:
+            if cmt == ref.commit:
+                message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
+    except NoSectionError:
+        pass
     for tag in repo.tags:
         if cmt == tag.commit:
             message = f'<b><style bg="ansiyellow" fg="ansiblack">[️Tag:{tag.name}]</style></b>'+message
