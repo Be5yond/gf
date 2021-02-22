@@ -8,7 +8,7 @@ from . import feature, hotfix
 from .utils import no_traceback as nt
 from .utils import get_create_date, repo
 from .db import GfDB
-from .inspect import rank, sync
+from . import inspector 
 
 
 app = typer.Typer()
@@ -156,8 +156,8 @@ def inspect(sync: bool=typer.Option(False, '--sync', '-s', help='synchronize lat
     import time
     now = time.time()
     if sync:
-        sync()
-    rank()
+        inspector.sync()
+    inspector.rank()
     end = time.time()
     print(end - now)
     
