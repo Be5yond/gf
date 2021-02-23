@@ -151,15 +151,15 @@ def log(size: int=typer.Argument(15, help='Limit the number of commits to output
 
 
 @app.command()
-def inspect(sync: bool=typer.Option(False, '--sync', '-s', help='synchronize latest commits to statistics')):
+def inspect(sync: bool=typer.Option(False, '--sync', '-s', help='synchronize latest commits to statistics'),
+            trending: bool=typer.Option(False, '--trending', '-t', help='show code modifycation trending of this repository'),
+            ):
     "statistics of the submitter activity"
-    import time
-    now = time.time()
     if sync:
         inspector.sync()
+    elif trending:
+        inspector.trending()
     inspector.rank()
-    end = time.time()
-    print(end - now)
     
 
 

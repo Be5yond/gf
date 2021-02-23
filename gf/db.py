@@ -136,4 +136,10 @@ class GfDB:
         sql = f'''SELECT author, COUNT(*), SUM(insertions), SUM(deletions), MIN(date), MAX(date) FROM commits GROUP BY author ORDER BY count(*) DESC;'''
         return self.cur.execute(sql).fetchall() 
 
+    def trending(self):
+        sql = "SELECT strftime('%Y-%m', date) sdate,SUM(insertions), SUM(deletions) FROM commits GROUP BY strftime('%W', date) ORDER BY date DESC;"
+        # sql = f'''SELECT SUM(insertions), SUM(deletions) FROM commits GROUP BY strftime('%Y-%m-%d', date);'''
+        return self.cur.execute(sql).fetchall() 
+
+
 
