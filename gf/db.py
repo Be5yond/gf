@@ -40,7 +40,6 @@ def fetch():
             '''
     cur.execute(sql_text)
     data=cur.fetchall()
-    print(data)
     conn.close()
 
 
@@ -55,11 +54,9 @@ def insert(cmt):
         {cmt.stats.total["deletions"]},
         '{cmt.committed_datetime.strftime(format)}'
         );'''
-    print(sql_text)
     cur.execute(sql_text)
     conn.commit()
     data=cur.fetchall()
-    print(data)
     conn.close()
 
 
@@ -96,7 +93,6 @@ class GfDB:
         try:
             self.cur.execute(sql)
         except sqlite3.OperationalError as e:
-            print(e)
             self.create_table()
         return self.cur.fetchone()
 
