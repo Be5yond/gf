@@ -21,19 +21,25 @@ def init():
     """
     create base branches: develop | test | release
     """
-    repo.git.branch('develop')
     repo.git.branch('release')
     repo.git.branch('test')
+    repo.git.branch('develop')
     with GfDB() as d:
         d.create_table()
 
 
+@app.command()
+def test():
+    """ Merge develop -> test 
+    """
+    nt(repo.git.checkout)('test')
+    nt(repo.git.merge)('develop')
 
 @app.command()
 def release():
-    """ After passing the test phase, merge test branch to main branch.
+    """ After passing the test phase, merge test -> release
     """
-    nt(repo.git.checkout)('main')
+    nt(repo.git.checkout)('release')
     nt(repo.git.merge)('test')
 
 
@@ -174,7 +180,6 @@ app.command('l', help='alias: log')(log)
 app.command('ins', help='alias: inspect')(inspect)
 app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
-
 
 
 def main():
