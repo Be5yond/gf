@@ -1,3 +1,5 @@
+
+![logo](https://github.com/Be5yond/gf/blob/main/doc/gitflo.png?raw=true)
 # gf
 a git-flow branch management
 
@@ -5,6 +7,9 @@ a git-flow branch management
 ```
 pip install gitflo
 ```
+### windows
+[下载载最新的release文件](https://github.com/Be5yond/gf/releases) 解压并将gf.exe 添加到path环境变量
+
 
 # Usage
 ## 1. branch management
