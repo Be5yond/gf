@@ -6,6 +6,7 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.containers import Window, HSplit, VSplit
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.widgets import Label
+import xml
 from .utils import repo
 from .dialog import ansired
 from .db import GfDB
@@ -23,6 +24,7 @@ def row(cmt, num, ins, de):
             if cmt == ref.commit:
                 message = f'<b><style bg="ansired" fg="ansiwhite">[️{ref.name}]</style></b>'+message
     except NoSectionError:
+        # 处理未关联remote分支的场景
         pass
     for tag in repo.tags:
         if cmt == tag.commit:
@@ -33,6 +35,12 @@ def row(cmt, num, ins, de):
     if cmt == repo.head.commit:
         message = '<b><style bg="ansiblue" fg="ansiblack">[HEAD]</style></b>'+message
 
+    try:
+        message = HTML(message)
+    except xml.parsers.expat.ExpatError:
+        # messge中包含特殊字符时
+        pass
+    
     return VSplit([
         Window(content=FormattedTextControl(f'{num}'), width=5),
         Window(width=1, char="|"),
@@ -45,7 +53,7 @@ def row(cmt, num, ins, de):
         Label(HTML(f'<b><style fg="ansigreen">+{ins}</style></b>'), width=5),
         Label(HTML(f'<b><style fg="ansired">-{de}</style></b>'), width=5),
         Window(width=1, char="|"),
-        Label(HTML(message))
+        Label(message)
     ])
 
 
