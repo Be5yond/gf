@@ -16,4 +16,5 @@ class Change(Enum):
     M = '🛠️' # modified
     D = '➖' # deleted
     R = '📇'   # renamed
+    U = '🗑️' # recover
 
