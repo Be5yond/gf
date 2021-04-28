@@ -2,12 +2,13 @@ from __future__ import unicode_literals
 import pathlib
 from typing import List, Sequence, Tuple, TypeVar
 from prompt_toolkit.application import Application
+from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent as E
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.containers import Window, HSplit
+from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.layout.containers import Window, HSplit, VSplit
 from prompt_toolkit.layout.margins import ConditionalMargin, ScrollbarMargin
 from prompt_toolkit.widgets import Label, Frame, CheckboxList 
 from prompt_toolkit.widgets.base import _DialogList
@@ -281,3 +282,53 @@ def stats_dialog():
     )
     return application.run()
 
+
+def conf_dialog(**kwargs):
+    def row(label, default):
+        buffer=Buffer()
+        buffer.text = default
+        return VSplit([
+            Label(HTML(f'{label}'), width=10),
+            Window(width=2, char=": "),
+            Window(content=BufferControl(buffer=buffer)),
+        ])
+    
+    help = Label(HTML(f'(Press {ansired("Tab][Down][Up")} to move cursor. {ansired("Ctrl+C][Esc")} to quit)'))
+    rows = [row(k, v) for k, v in kwargs.items()]
+    
+    root_container = HSplit([
+        help,
+        Window(height=1, char="-", width=10), 
+        *rows
+    ])
+    kb = KeyBindings()
+    
+    
+    @kb.add("c-c")
+    @kb.add("escape")
+    def _(event):
+        event.app.exit()
+    
+    @kb.add('tab')
+    @kb.add('down')
+    def _(event):
+        event.app.layout.focus_next()
+    
+    @kb.add("up")
+    def _(event):
+        event.app.layout.focus_previous()
+    
+    @kb.add("enter")
+    def _(event):
+        data = []
+        for child in root_container.children[2:]:
+            value = child.children[-1].content.buffer.text
+            data.append(value)
+        return event.app.exit(data)
+    
+    
+    layout = Layout(root_container)
+    
+    application = Application(layout=layout, full_screen=False, key_bindings=kb)
+    return application.run()  
+    
