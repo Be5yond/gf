@@ -1,8 +1,6 @@
 import typer
 import re
 import urllib
-from typing import Optional
-from configparser import NoOptionError, NoSectionError
 from .utils import repo, Conf
 from .dialog import conf_dialog
 import requests
@@ -11,13 +9,17 @@ app = typer.Typer(help='Interact with gitlab by accessing gitlab-api')
 conf = Conf()
 
 
-@app.command()
+# @app.command()
 def config():
-    conf = Conf()
+    """ configuration for accessing gitlab-api\n
+    host : gitlab host info.  example: https://gitlab.com\n
+    version : gitlab api version.  example: [v1 | v2 | v3 | v4]\n
+    token : gitlab private token. example: 679Pqw11v739pqfy2jRg
+    """
     try:
         conf.host, conf.version, conf.token = conf_dialog(host=conf.host, version=conf.version, token=conf.token)
     except TypeError:
-        pass
+        typer.Abort()
 
 
 @app.command(name='mr')
@@ -49,6 +51,19 @@ def get_project_id():
     project_id = requests.get(f'{conf.host}/api/{conf.version}/projects/{project_name}', headers=headers)
 
     return project_id.json().get('id')
+
+
+@app.callback()
+def check_config(verbose: bool = False):
+    """
+    Manage users in the awesome CLI app.
+    """
+    if conf.token == 'example_token':
+        typer.echo('Need gitlab configuration !')
+        config()
+
+
+
 
 
 

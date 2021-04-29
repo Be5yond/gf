@@ -6,6 +6,7 @@ import string
 import base64
 import typer
 from git.exc import GitCommandError, InvalidGitRepositoryError
+from configparser import NoOptionError, NoSectionError
 
 
 def get_repo():
@@ -60,26 +61,38 @@ class Conf:
 
     @property
     def token(self):
-        token = repo.config_reader('global').get('gitlab', option='token')
-        # token = decrypt(token)
-        return token
+        try:
+            token = repo.config_reader('global').get('gitlab', option='token')
+            # token = decrypt(token)
+        except (NoOptionError, NoSectionError):
+            token = 'example_token'
+        finally:
+            return token
 
     @token.setter
     def token(self, value):
+        value = value.strip()
         # token = encrypt(value)
         repo.config_writer('global').set_value('gitlab', 'token', value).release()
 
     @property
     def host(self):
-        return repo.config_reader('global').get('gitlab', option='host')
+        try:
+            return repo.config_reader('global').get('gitlab', option='host')
+        except (NoOptionError, NoSectionError):
+            return 'https://gitlab.example.com'
 
     @host.setter
     def host(self, value):
+        value = value.strip()
         repo.config_writer('global').set_value('gitlab', 'host', value).release()
 
     @property
     def version(self):
-        return repo.config_reader('global').get('gitlab', option='version')
+        try:
+            return repo.config_reader('global').get('gitlab', option='version')
+        except (NoOptionError, NoSectionError):
+            return 'v4'
 
     @version.setter
     def version(self, value):
