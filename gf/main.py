@@ -4,7 +4,7 @@ import typer
 from prompt_toolkit.formatted_text import HTML
 from .dialog import CommitMsgPrompt, radiolist_dialog, stats_dialog, ansired
 from .log import log_dialog
-from . import feature, hotfix, inspector, gitlab
+from . import feature, hotfix, inspector, gitlab, submodule
 from .utils import no_traceback as nt
 from .utils import get_create_date, repo
 from .db import GfDB
@@ -16,6 +16,7 @@ app.add_typer(feature.app, name='f', help='alias: feature')
 app.add_typer(hotfix.app, name='hotfix')
 app.add_typer(hotfix.app, name='h', help='alias: hotfix')
 app.add_typer(gitlab.app, name='lab')
+app.add_typer(submodule.app, name='sub')
 
 
 @app.command()
@@ -66,8 +67,6 @@ def commit(body: bool = typer.Option(False, '--body', '-b', help='include body m
         cmt = repo.index.commit(message)
         with GfDB() as d:
             d.setdefault(cmt)
-
-
 
 
 @app.command()
@@ -185,7 +184,6 @@ app.command('r', help='alias: release')(release)
 app.command('u', help='alias: undo')(undo)
 app.command('l', help='alias: log')(log)
 app.command('ins', help='alias: inspect')(inspect)
-
 
 
 
