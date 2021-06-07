@@ -9,11 +9,13 @@ pip install gitflo
 ```
 ### windows
 [下载载最新的release文件](https://github.com/Be5yond/gf/releases) 解压并将gf.exe 添加到path环境变量
+### linux & mac
+TODO
 
 
 # Usage
 ## 1. branch management
-### 三个长期分支Dev/Test/Release，features分支为短期分支，分支之间只能feature>dev>test>release单项合并    
+### 三个长期分支Dev/Test/Release，features分支为短期分支，分支之间只能feature>dev>test>release单向合并    
 1. feature分支：例如："f-cash", 从develop分支创建，开发完成后，merge到develop分支，上线后feature分支删除
 2. develop分支：开发人员日常工作分支，对应开发环境，进行联调和自测，自测通过后merge到test分支
 3. test分支：测试人员日常工作分支，对应测试环境，测试通过后merge到Release分支
